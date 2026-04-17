@@ -1,13 +1,18 @@
 FROM node:22-alpine
 WORKDIR /app
 
+# Install build tools globally (avoids workspace symlink permission issues)
+RUN npm install -g typescript vite
+
 COPY . .
 
 RUN npm install
 
-# Build using full binary paths (bypass npm workspace permission issues)
-RUN node_modules/.bin/tsc --project backend/tsconfig.json
-RUN node_modules/.bin/vite build --config frontend/vite.config.ts
+# Build backend
+RUN cd backend && tsc
+
+# Build frontend
+RUN cd frontend && vite build
 
 EXPOSE 3001
 
