@@ -1,0 +1,3 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "exit 0"
