@@ -6,9 +6,8 @@ cmds = ["npm install"]
 
 [phases.build]
 cmds = [
-  "npm install -g typescript vite",
-  "cd backend && tsc",
-  "cd frontend && vite build"
+  "./node_modules/.bin/tsc --project backend/tsconfig.json",
+  "./node_modules/.bin/vite build --config frontend/vite.config.ts"
 ]
 
 [start]
