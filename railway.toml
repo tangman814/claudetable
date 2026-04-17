@@ -1,6 +1,6 @@
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+builder = "NIXPACKS"
+buildCommand = "npm install -g typescript vite && npm install && cd backend && tsc && cd /app/frontend && vite build"
 
 [deploy]
 startCommand = "node backend/dist/index.js"

@@ -1,0 +1,6 @@
+node_modules/
+backend/dist/
+backend/claudetable.db
+frontend/dist/
+.env
+*.log
