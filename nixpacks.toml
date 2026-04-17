@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = [
+  "npm install -g typescript vite",
+  "cd backend && tsc",
+  "cd frontend && vite build"
+]
+
+[start]
+cmd = "node backend/dist/index.js"
