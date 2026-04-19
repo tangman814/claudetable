@@ -1,7 +1,11 @@
 {
   "name": "@claudetable/shared",
   "version": "1.0.0",
-  "main": "./types.ts",
+  "main": "./dist/types.js",
+  "types": "./dist/types.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "zod": "^3.23.8"
   }
