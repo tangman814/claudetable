@@ -3,6 +3,8 @@ import cors from "cors";
 import session from "express-session";
 import connectSqlite3 from "connect-sqlite3";
 import path from "path";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { db, sqlite } from "./db/client";
 import zonesRouter from "./routes/zones";
 import tablesRouter from "./routes/tables";
 import customersRouter from "./routes/customers";
@@ -12,6 +14,11 @@ import settingsRouter from "./routes/settings";
 import authRouter from "./routes/auth";
 import { requireAuth } from "./middleware/auth";
 import { errorHandler, notFound } from "./middleware/errorHandler";
+
+// ── Auto-migrate on startup ───────────────────────────────────────────────────
+const migrationsFolder = path.join(__dirname, "db", "migrations");
+migrate(db, { migrationsFolder });
+console.log("Database migrations applied.");
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
