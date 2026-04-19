@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import session from "express-session";
+import connectSqlite3 from "connect-sqlite3";
 import path from "path";
 import zonesRouter from "./routes/zones";
 import tablesRouter from "./routes/tables";
@@ -24,8 +25,15 @@ if (!isProd) {
 app.use(express.json());
 
 // ── Session ───────────────────────────────────────────────────────────────────
+const SQLiteStore = connectSqlite3(session);
+const dbDir = path.dirname(process.env.DB_PATH ?? path.join(__dirname, "..", "..", "claudetable.db"));
+
 app.use(
   session({
+    store: new (SQLiteStore as any)({
+      db: "sessions.db",
+      dir: dbDir,
+    }),
     secret: process.env.SESSION_SECRET ?? "claudetable-dev-secret",
     resave: false,
     saveUninitialized: false,
@@ -65,7 +73,7 @@ if (isProd) {
   // In production, CWD is /app (project root); frontend/dist is at /app/frontend/dist
   const frontendDist = path.join(process.cwd(), "frontend", "dist");
   app.use(express.static(frontendDist));
-  app.get("*", (_req, res) => {
+  app.get("/{*path}", (_req, res) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
