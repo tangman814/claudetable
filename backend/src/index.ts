@@ -24,6 +24,11 @@ const app = express();
 const PORT = process.env.PORT ?? 3001;
 const isProd = process.env.NODE_ENV === "production";
 
+// Trust reverse proxy (Zeabur/Railway) so secure cookies work over HTTPS
+if (isProd) {
+  app.set("trust proxy", 1);
+}
+
 // ── CORS (dev only) ───────────────────────────────────────────────────────────
 if (!isProd) {
   app.use(cors({ origin: "http://localhost:5173", credentials: true }));
