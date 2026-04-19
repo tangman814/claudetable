@@ -18,6 +18,9 @@ COPY . .
 # Build shared → backend → frontend
 RUN npm run build
 
+# Copy migration files into dist (needed at runtime for auto-migrate)
+RUN cp -r backend/src/db/migrations backend/dist/db/migrations
+
 # ── Stage 2: Production ───────────────────────────────────────────────────────
 FROM node:22-slim
 
