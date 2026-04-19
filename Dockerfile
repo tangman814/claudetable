@@ -14,11 +14,8 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Build backend (TypeScript → dist/)
-RUN ./node_modules/.bin/tsc --project backend/tsconfig.json
-
-# Build frontend (Vite → frontend/dist/)
-RUN ./node_modules/.bin/vite build --config frontend/vite.config.ts
+# Build backend + frontend via workspace scripts
+RUN npm run build
 
 EXPOSE 3001
 
