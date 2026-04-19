@@ -15,7 +15,7 @@ RUN npm install --include=dev
 # Copy source code
 COPY . .
 
-# Build backend + frontend
+# Build shared → backend → frontend
 RUN npm run build
 
 # ── Stage 2: Production ───────────────────────────────────────────────────────
@@ -29,10 +29,13 @@ COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 COPY shared/package*.json ./shared/
 
-# Install production dependencies only
+# Install production dependencies only (recreates workspace symlinks)
 RUN npm install --omit=dev
 
-# Copy built artifacts from builder stage
+# Copy compiled shared package (needed at runtime via @claudetable/shared)
+COPY --from=builder /app/shared/dist ./shared/dist
+
+# Copy built artifacts
 COPY --from=builder /app/backend/dist ./backend/dist
 COPY --from=builder /app/frontend/dist ./frontend/dist
 
