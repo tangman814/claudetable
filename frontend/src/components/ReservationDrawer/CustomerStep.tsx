@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { customersApi } from "../../api";
 import type { Customer } from "../../../../shared/types";
+import { normalizePhone } from "../../lib/phoneUtils";
 
 interface Props {
   onSelect: (customer: Customer) => void;
@@ -16,8 +17,9 @@ export function CustomerStep({ onSelect, initial }: Props) {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
-  // Search when either field changes (debounced)
-  const query = phone.trim() || name.trim();
+  // 電話優先搜尋：有電話時用正規化電話搜尋，否則用姓名
+  const normalizedPhone = normalizePhone(phone.trim());
+  const query = normalizedPhone.length >= 4 ? normalizedPhone : name.trim();
   useEffect(() => {
     if (selected) return;
     if (query.length < 2) { setResults([]); return; }
@@ -38,7 +40,7 @@ export function CustomerStep({ onSelect, initial }: Props) {
     setCreating(true);
     setError("");
     try {
-      const res = await customersApi.create({ name: name.trim(), phone: phone.trim() });
+      const res = await customersApi.create({ name: name.trim(), phone: normalizePhone(phone.trim()) });
       setSelected(res.data);
       onSelect(res.data);
     } catch (e: unknown) {
@@ -102,7 +104,7 @@ export function CustomerStep({ onSelect, initial }: Props) {
           <label className="text-xs text-slate-500 mb-1 block">電話</label>
           <input
             type="tel"
-            placeholder="0912-345-678"
+            placeholder="0912345678"
             value={phone}
             onChange={(e) => { setPhone(e.target.value); setSelected(null); }}
             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"

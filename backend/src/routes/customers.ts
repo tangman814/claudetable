@@ -4,6 +4,11 @@ import { customers, reservations } from "../db/schema";
 import { eq, like, or, sql } from "drizzle-orm";
 import { CreateCustomerSchema, UpdateCustomerSchema } from "@claudetable/shared";
 
+/** 去除所有非數字字元，統一電話格式 */
+function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
 const router = Router();
 
 router.get("/", (req, res) => {
@@ -11,17 +16,25 @@ router.get("/", (req, res) => {
 
   let rows;
   if (q) {
-    // Search both name and phone simultaneously
-    rows = db.select().from(customers)
-      .where(or(
-        like(customers.name, `%${q}%`),
-        like(customers.phone, `%${q}%`)
-      ))
-      .orderBy(sql`${customers.visitCount} DESC`)
-      .limit(20).all();
+    const normalizedQ = normalizePhone(String(q));
+    // 若 q 全為數字（電話搜尋），用正規化電話比對；否則同時搜名稱與電話
+    if (normalizedQ === String(q).replace(/\s/g, "") && normalizedQ.length >= 4) {
+      rows = db.select().from(customers)
+        .where(like(customers.phone, `%${normalizedQ}%`))
+        .orderBy(sql`${customers.visitCount} DESC`)
+        .limit(20).all();
+    } else {
+      rows = db.select().from(customers)
+        .where(or(
+          like(customers.name, `%${q}%`),
+          like(customers.phone, `%${normalizePhone(String(q))}%`)
+        ))
+        .orderBy(sql`${customers.visitCount} DESC`)
+        .limit(20).all();
+    }
   } else if (phone) {
     rows = db.select().from(customers)
-      .where(like(customers.phone, `%${phone}%`))
+      .where(like(customers.phone, `%${normalizePhone(String(phone))}%`))
       .limit(20).all();
   } else if (name) {
     rows = db.select().from(customers)
@@ -55,9 +68,10 @@ router.get("/:id", (req, res) => {
 router.post("/", (req, res) => {
   const body = CreateCustomerSchema.parse(req.body);
   const now = new Date().toISOString();
+  const normalizedPhoneValue = normalizePhone(body.phone);
 
-  // Check for duplicate phone
-  const existing = db.select().from(customers).where(eq(customers.phone, body.phone)).limit(1).all()[0];
+  // Check for duplicate phone (正規化後比對)
+  const existing = db.select().from(customers).where(eq(customers.phone, normalizedPhoneValue)).limit(1).all()[0];
   if (existing) {
     res.status(409).json({ error: "Conflict", message: "Phone number already registered", data: existing });
     return;
@@ -65,7 +79,7 @@ router.post("/", (req, res) => {
 
   const [created] = db.insert(customers).values({
     name: body.name,
-    phone: body.phone,
+    phone: normalizedPhoneValue,
     email: body.email ?? null,
     notes: body.notes ?? null,
     visitCount: 0,
