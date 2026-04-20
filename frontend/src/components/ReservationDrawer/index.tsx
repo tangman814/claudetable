@@ -208,8 +208,11 @@ export function ReservationDrawer() {
                     type="number"
                     min={1}
                     max={100}
-                    value={form.partySize}
-                    onChange={(e) => setForm((f) => ({ ...f, partySize: Number(e.target.value) }))}
+                    value={form.partySize || ""}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      setForm((f) => ({ ...f, partySize: isNaN(n) ? 0 : n }));
+                    }}
                     className="w-24 border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                   />
                 </div>
