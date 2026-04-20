@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Stage, Layer, Rect, Circle, Text, Group } from "react-konva";
 import type Konva from "konva";
 import { useZones, useTables } from "../../hooks/useTables";
@@ -43,6 +43,22 @@ export default function FloorPlanPage() {
   const { data: allTables } = useTables();
   const { data: schedule } = useSchedule(activeDate);
   const slots = schedule?.slots ?? [];
+
+  // Responsive canvas size
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [stageSize, setStageSize] = useState({ width: 700, height: 550 });
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const w = Math.max(entry.contentRect.width, 300);
+        const h = Math.max(entry.contentRect.height, 300);
+        setStageSize({ width: w, height: h });
+      }
+    });
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [reassignSource, setReassignSource] = useState<{
@@ -145,8 +161,8 @@ export default function FloorPlanPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Canvas */}
-        <div className="flex-1 overflow-auto bg-slate-100 p-2">
-          <Stage width={700} height={550} className="bg-white rounded-lg shadow-inner border border-slate-200">
+        <div ref={containerRef} className="flex-1 overflow-hidden bg-slate-100 p-2" style={{ touchAction: "none" }}>
+          <Stage width={stageSize.width - 16} height={stageSize.height - 16} className="bg-white rounded-lg shadow-inner border border-slate-200">
             <Layer>
               {zoneTables.map((table) => {
                 const isRound = table.shape === "round";
@@ -161,6 +177,7 @@ export default function FloorPlanPage() {
                     y={table.yPosition}
                     draggable={!reassignSource}
                     onClick={() => handleTableClick(table)}
+                    onTap={() => handleTableClick(table)}
                     onDragEnd={(e) => handleTableDragEnd(table, e)}
                     onMouseEnter={(e) => { const container = e.target.getStage()?.container(); if (container) container.style.cursor = reassignSource ? "pointer" : "grab"; }}
                     onMouseLeave={(e) => { const container = e.target.getStage()?.container(); if (container) container.style.cursor = "default"; }}
