@@ -9,9 +9,6 @@ import { cn } from "../../lib/cn";
 
 const STATUS_OPTIONS: { value: ReservationStatus; label: string }[] = [
   { value: "confirmed", label: "已確認" },
-  { value: "seated", label: "入座中" },
-  { value: "completed", label: "已完成" },
-  { value: "no-show", label: "未到場" },
   { value: "cancelled", label: "已取消" },
 ];
 
@@ -26,11 +23,10 @@ export default function DailyViewPage() {
   const { data: reservations, isLoading } = useReservations(activeDate);
 
   const active = (reservations ?? []).filter(
-    (r) => r.status !== "cancelled" && r.status !== "no-show"
+    (r) => r.status !== "cancelled"
   ) as RichReservation[];
 
   const totalCovers = active.reduce((sum, r) => sum + r.partySize, 0);
-  const seated = active.filter((r) => r.status === "seated").length;
   const confirmed = active.filter((r) => r.status === "confirmed").length;
   const overCapacity = active.filter((r) => r.tables?.some((t) => t.capacityWarning === 1)).length;
 
@@ -68,7 +64,6 @@ export default function DailyViewPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         <StatCard label="今日總人數" value={totalCovers} color="text-sky-600" />
         <StatCard label="已確認" value={confirmed} color="text-blue-600" />
-        <StatCard label="入座中" value={seated} color="text-green-600" />
         {unassigned.length > 0 ? (
           <StatCard label="未配桌" value={unassigned.length} color="text-orange-500" />
         ) : overCapacity > 0 ? (
@@ -107,12 +102,12 @@ export default function DailyViewPage() {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700">訂位清單</h2>
-          <span className="text-xs text-slate-400">{active.length} 筆</span>
+          <span className="text-xs text-slate-400">{(reservations ?? []).length} 筆</span>
         </div>
 
         {isLoading ? (
           <div className="text-center text-slate-400 text-sm py-10">載入中...</div>
-        ) : active.length === 0 ? (
+        ) : (reservations ?? []).length === 0 ? (
           <div className="text-center text-slate-400 text-sm py-10">今日無訂位</div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -159,7 +154,7 @@ export default function DailyViewPage() {
                   </div>
 
                   {/* Quick status change */}
-                  {r.status !== "completed" && r.status !== "cancelled" && (
+                  {r.status !== "cancelled" && (
                     <select
                       value={r.status}
                       onChange={(e) => handleStatusChange(r.id, e.target.value as ReservationStatus)}
